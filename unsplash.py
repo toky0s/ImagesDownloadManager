@@ -6,6 +6,9 @@ This module contains functions which can return a list contains urls which you c
 
 import requests
 import json
+from bs4 import BeautifulSoup
+from XImage import XImage
+from urllib.request import urlretrieve
 
 SEARCH = 'https://unsplash.com/napi/search/photos'
 RANDOM = 'https://unsplash.com/napi/photos/random'
@@ -17,27 +20,7 @@ SMALL = 'small'
 THUMB = 'thumb'
 
 
-class XImage:
-
-    def __init__(self, name, url, info={}):
-        self.name = name
-        self.url = url
-        self.info = info
-
-    def __str__(self):
-        return 'XImage<{} {}>'.format(self.name, self.url)
-
-    def getName(self):
-        return self.name
-
-    def getUrl(self):
-        return self.url
-
-    def getInfo(self):
-        return self.info
-
-
-def checkQuery(query) -> list:
+def UnsplashCheckQuery(query) -> list:
     """
     Hàm này trả về một list chưa hai giá trị là:
 
@@ -112,7 +95,53 @@ def UnsplashAPIRandom(amount, quality):
     return results
 
 
+def GratisographyAPISearch(query, page):
+    """
+    Hàm này nhận vào một `query` và trả về một list các XImage dựa theo query đầu vào. Tham số  `page`
+    là tùy chọn hàm sẽ get tới page nào. Mặc định get page đầu tiên (page=1). Nếu tham số này vượt quá số page hiện có, mặc định lấy tối đa.
+
+    :pattern: https://gratisography.com/page/1/?s=cat
+    """
+    result = []
+
+    def matchSinglePhoto(tag):
+        return tag.has_attr('class') and tag.has_attr('id') and tag.name == u'article'
+
+    params = {'s': query}
+    for i in range(1, page+1):
+        r = requests.get('https://gratisography.com/page/1', params=params)
+        soup = BeautifulSoup(r.text, 'lxml')
+        articles = soup.find_all(matchSinglePhoto)
+        for tag in articles:
+            url_iamge = tag.div.a['href']
+            url_iamge_r = requests.get(url_iamge)
+            soup_url_image = BeautifulSoup(url_iamge_r.text, 'lxml')
+            download_buttons = soup_url_image.find(class_='download-buttons')
+            url = download_buttons.a['href']
+
+            name = url.split('/')[-1][0:-4]
+            ximage = XImage(name, url)
+            result.append(ximage)
+    return result
+
+
+def PixabayAPISearch(query, page):
+    ENG = 'https://picjumbo.com/search/cat'
+    r = requests.get(ENG)
+    soup = BeautifulSoup(r.text,'lxml')
+    thumb_urls = soup.find_all(class_='tri_img_one')
+    for div in thumb_urls:
+
+        if 'picjumbo.com' in div.a['href']:
+            print(div.a['href'])
+    return None
+
+
 if __name__ == "__main__":
-    ximages = UnsplashAPIRandom(12, REGULAR)
-    print(ximages[0].getName())
-    print(ximages[0].getUrl())
+    # ximages = UnsplashAPIRandom(12, REGULAR)
+    # print(ximages[0].getName())
+    # print(ximages[0].getUrl())
+
+    # print(GratisographyAPISearch('trees',1)[0].getName())
+    PixabayAPISearch('cat', 'ok')
+    # urlretrieve('https://picjumbo.com/download/?d=cow.jpg&n=cow&id=1','D:\ok.jpg')
