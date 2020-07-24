@@ -4,16 +4,22 @@ import json
 from bs4 import BeautifulSoup
 from XImage import XImage, UnsplashXImage
 from urllib.request import urlretrieve
+import re
 
 
 class URLImage:
-    """Abstract class này đại diện là một trình tìm kiếm URL của ảnh. Class kế thừa class này buộc phải triển khai phương thức getURLs trả về một list các URLs"""
+    """Abstract class này đại diện là một trình tìm kiếm URL của ảnh.
+    Class kế thừa class này buộc phải triển khai phương thức getURLs trả về một list các XImage Object"""
 
     def __init__(self):
         json_info = ''
 
     def getXImages(self) -> list:
         """Class implement method này phải trả về một list các XImage tìm thấy dựa trên query đưa vào."""
+        pass
+
+    def list2XImage(self, item) -> XImage :
+        """Method này trả về một XImage Object, bạn có thể implement hoặc không."""
         pass
 
 
@@ -73,7 +79,7 @@ class UnsplashURLImage(URLImage):
                 return results
 
             for i in page_results:
-                name = i['id']
+                id_ = i['id']
                 url = i['urls'][self.quality]
                 created_at = i['created_at']
                 updated_at = i['updated_at']
@@ -82,11 +88,41 @@ class UnsplashURLImage(URLImage):
                 height = i['height']
                 description = i['description']
 
-                ximage = UnsplashXImage(name, url, created_at, updated_at, promoted_at, width, height, description)
+                ximage = UnsplashXImage(url, id_, created_at, updated_at, promoted_at, width, height, description)
                 results.append(ximage)
         return results
 
 
-a = UnsplashURLImage('cat',5,3)
+class GratisographyURlImage(URLImage):
+
+    def __init__(self, query, page):
+        super().__init__()
+        self.query = query
+        self.page = page
+
+    
+    def matchSinglePhoto(self, tag):
+        return tag.has_attr('class') and tag.has_attr('id') and tag.name == u'article'
+    
+    def getXImages(self):
+        """
+        Hàm này nhận vào một `query` và trả về một list các XImage dựa theo query đầu vào. Tham số  `page`
+        là tùy chọn hàm sẽ get tới page nào. Mặc định get page đầu tiên (page=1). Nếu tham số này vượt quá số page hiện có, mặc định lấy tối đa.
+
+        :pattern: https://gratisography.com/page/1/?s=cat
+        """
+        result = []
+
+        params = {'s': self.query}
+        for i in range(1, self.page+1):
+            r = requests.get('https://gratisography.com/page/1', params=params)
+            soup = BeautifulSoup(r.text, 'lxml')
+            list_imgs = soup.find_all('img')
+            result = [i['src'] for i in list_imgs if '.jpg' in i['src']]
+                
+        return result
+
+
+a = GratisographyURlImage('cat',5)
 b = a.getXImages()
-b[0].showInfo()
+print(b)

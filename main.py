@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (QWidget,QMainWindow, QApplication, QPushButton, 
 QRadioButton, QLabel, QGridLayout, QCheckBox, QLineEdit, QFileDialog, QFontDialog, QVBoxLayout, QHBoxLayout, QGroupBox, QFileDialog, QButtonGroup)
 import sys
-from PyQt5.QtGui import QFont
-from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtCore import QSize, QThread
 from XImageClass import QHRadioGroupBox, QRadioButtonCustom
 
 class UnsplashOptionWindow(QWidget):
@@ -58,6 +58,7 @@ class App(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QIcon(QPixmap('imgs/icon.png')))
         self.setWindowTitle('Images Download Manager')
         self.setupUI()
 
@@ -129,8 +130,8 @@ class App(QWidget):
         self.line_save_at.setText(file)
 
     def unsplashOptionWindow(self):
-        self.sub = UnsplashOptionWindow()
         if self.check_unsplash.isChecked():
+            self.sub = UnsplashOptionWindow()
             self.sub.show()
         else:
             self.sub.close()
