@@ -3,13 +3,13 @@ XImageClass
 ~~~~~~~~~~~
 Đây là nơi chứa các widget được custom để giúp bạn nhanh chóng tạo ra một số widget và bố cục phổ biến nhanh chóng."""
 
-from PyQt5.QtWidgets import QGroupBox, QHBoxLayout, QRadioButton, QLabel, QFrame, QVBoxLayout
+from PyQt5.QtWidgets import QGroupBox, QHBoxLayout, QRadioButton, QLabel, QFrame, QVBoxLayout, QCheckBox
 from PyQt5.QtGui import QPixmap
 
 class QRadioButtonCustom(QRadioButton):
 
-    def __init__(self, str, value, parent=None):
-        super().__init__(str, parent=parent)
+    def __init__(self, text, value, parent=None):
+        super().__init__(text, parent=parent)
         self.value = value
 
     def getValue(self):
@@ -18,15 +18,26 @@ class QRadioButtonCustom(QRadioButton):
     def setValue(self, value):
         self.value = value
 
+class QCheckboxCustom(QCheckBox):
+
+    def __init__(self, text: str, parent=None):
+        super().__init__(text, parent)
+        self.value = text
+
+    def getValue(self) -> str:
+        return self.value
+    
+    def setValue(self, value: str):
+        self.value = value
 
 class QHRadioGroupBox(QGroupBox):
 
-    def __init__(self, str, *QRadioButtonCustoms, parent=None):
+    def __init__(self, title, *QRadioButtonCustoms, parent=None):
         '''
         Triển khai một group radio button theo chiều ngang
         :param `*QRadioButtonCustoms`: Truyền vào các QRadioButtonCustom
         '''
-        super().__init__(str, parent=parent)
+        super().__init__(title, parent=parent)
         self.value = ''
         self.radioButtons = QRadioButtonCustoms
         self.hbox_layout = QHBoxLayout(self)
@@ -53,6 +64,28 @@ class QHRadioGroupBox(QGroupBox):
         rd = self.sender()
         if rd.isChecked():
             self.value = rd.getValue()
+
+class QHCheckboxGroupBox(QGroupBox):
+
+    def __init__(self, title, *QCheckboxCustoms: QCheckboxCustom, parent=None):
+        super().__init__(title, parent)
+        self.checkboxs = QCheckboxCustoms
+        self.hbox_layout = QHBoxLayout(self)
+        self.setLayout(self.hbox_layout)
+        for i in self.checkboxs:
+            self.hbox_layout.addWidget(i)
+
+    def addCheckboxCustom(self, checkboxCustom):
+        self.hbox_layout.addWidget(checkboxCustom)
+
+    def getCheck(self) -> list:
+        """Get checkboxs' name which were checked."""
+        results = []
+        for i in self.checkboxs:
+            if i.isChecked():
+                results.append(i)
+        return results
+
 
 class QXImage(QFrame):
 
